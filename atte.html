@@ -1,0 +1,28 @@
+<head>
+</head>
+<body style="display:flex;background-color:">
+
+<div id ="pal" style ="display:block;text-align:center;font-size: 50px;margin:auto auto;">
+<br>
+<p id="email" style="margin:0;font-size:0.4em;">contact@atteniemi.com</p>
+
+</div>
+
+<script>
+var palindromes = ["Atte diat otti. Hitto! Taidetta!", "Atte E, mahtavat naisesi antavat hameetta!", "Atte, hupi-Leena piti paneelipuhetta.", 
+"Atte kalusi sulaketta.", "Atte kaluu suulaketta.", "Atte kumiapina panipa imuketta!", "Atte, kuminaa saatte lounaalla. Anu olettaa: 'Saan imuketta!'", "Atte kumiorava, varo imuketta!",
+ "Atte, noki lepäämättä, jemmaa, reivaa ja jaa vieraamme jättämää pelikonetta!", "Atte S. osittaa motellissa teetassille tomaattisosetta.", "Atte T. saa ruttopotturaastetta.",
+ "Atte tuu! Puutetta!", "Atte ulos oluetta!", "Atte vaati, puut iski Mikko, kokki, miksi tuupit aavetta?", "Attee rääkkää Reetta!", "Atte-emo, kato tota: komeetta!", "Atteni atavisti-avustajat suvaitsivat ainetta.",
+"Atte, diat ovat avotaidetta!", "Atte, S.O.S.! Anna sosetta!", "Atte, lappakälyni tiukemman akateeminen imee takanamme kuitin yläkappaletta.", "Ella ja jano tuloo, sinä älykäs Atteni. Aika huikan ööliä sai Taru Ratia säilöön. Aki U haki ainetta Säkylään; iso olut on ajajalle."];
+
+//palindromes.forEach(function(palindrome){
+//    console.log(palindrome)
+//});
+
+document.getElementById("pal").insertAdjacentHTML('afterbegin', palindromes[Math.floor(Math.random() * (palindromes.length - 1))]);
+
+// Palindromes related to my name. That's it.
+</script>
+
+
+</body>
