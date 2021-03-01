@@ -6,9 +6,20 @@
     <description>Recent content on Atte Niemi</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
+    <lastBuildDate>Mon, 01 Mar 2021 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://www.atteniemi.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>pwnED 2 CTF Writeup - scuffed_rsa</title>
+      <link>http://www.atteniemi.com/posts/pwned2-writeup-rsa/</link>
+      <pubDate>Mon, 01 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.atteniemi.com/posts/pwned2-writeup-rsa/</guid>
+      <description>In this challenge, we are given source code for a bad RSA algorithm. We are also given output (the ciphertext and $n$). We start by observing a part of the source code:
+e = 65536 def gen_key(): p = getPrime(1024) q = getPrime(1024) n = p # q t = (p-1) * (q-1) d = inverse(e, t) return n, d Two things stand out here. We see that $n$ ends up being a prime, which means that the totient function becomes $n-1$.</description>
+    </item>
     
   </channel>
 </rss>
