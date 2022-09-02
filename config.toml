@@ -1,0 +1,31 @@
+# The URL the site will be built for
+base_url = "https://www.atteniemi.com"
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = true
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = true
+
+generate_feed = true
+taxonomies = [
+    # You can enable/disable RSS
+    {name = "categories", feed = true},
+    {name = "tags", feed = true},
+]
+
+[markdown]
+# Whether to do syntax highlighting
+# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
+highlight_code = true
+highlight_theme = "mreq_dark"
+extra_syntaxes_and_themes = ["syntaxes", "syntaxes/terraform-syntax", "syntaxes/mreq-theme"]
+
+[extra]
+author = "Atte Niemi"
+after_dark_title = "Atte Niemi"
+after_dark_menu = [
+    {url = "$BASE_URL", name = "home"},
+    {url = "$BASE_URL/about", name = "about"},
+    {url = "https://github.com/hur", name = "github"},
+]

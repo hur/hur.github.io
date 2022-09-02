@@ -1,0 +1,6 @@
+[submodule "syntaxes/terraform-syntax"]
+	path = syntaxes/terraform-syntax
+	url = git@github.com:alexlouden/Terraform.tmLanguage.git
+[submodule "syntaxes/mreq-theme"]
+	path = syntaxes/mreq-theme
+	url = git@github.com:mreq/mreq-theme.git
