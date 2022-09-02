@@ -21,7 +21,7 @@ The full Terraform source for our CTFd deployment is available at [hur/ctfd-gcp]
 
 ![CTFd Architecture diagram](https://raw.githubusercontent.com/hur/ctfd-gcp/master/docs/architecture_overview.svg)
 
-The applications are deployed in a VPC, and only App Engine has a public IP address, and sits behind the App Engine load balancer, allowing us to add instances of CTFd easily. We used manual scaling in order for costs to be more predictable, but App Engine supports autoscaling and it is easily enable for when the number of instances is more volatile.
+The applications are deployed in a VPC, and only App Engine has a public IP address, and sits behind the App Engine load balancer, allowing us to add instances of CTFd easily. We used manual scaling in order for costs to be more predictable, but App Engine supports autoscaling and it is easily enabled if the number of instances is more volatile.
 
 Cloud SQL and Redis are also easily configured with High Availability without having to worry about implementation details, making scaling up easier.
 
