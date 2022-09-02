@@ -1,5 +1,5 @@
 +++
-title = "Scalable CTF infrastructure on GCP & Digital Ocean"
+title = "Scalable CTF infrastructure: Part 1 - Scaling CTFd on GCP"
 date = 2022-08-31
 summary = true
 
