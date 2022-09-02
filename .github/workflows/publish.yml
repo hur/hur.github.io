@@ -1,8 +1,7 @@
-name: Zola on GitHub Pages
 on: 
   push:
     branches:
-      - main
+     - main
 
 name: Build and deploy GH Pages
 jobs:
