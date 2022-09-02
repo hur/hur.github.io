@@ -2,11 +2,13 @@ on:
   push:
     branches:
      - main
+    pull_request:
 
 name: Build and deploy GH Pages
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -16,3 +18,18 @@ jobs:
           # Target branch
           PAGES_BRANCH: gh-pages
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+name: Build GH Pages
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: build
+        uses: shalzz/zola-deploy-action@v0.16.1
+        env:
+          BUILD_ONLY: true
+          BUILD_FLAGS: --drafts
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
