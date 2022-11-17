@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+      <!-- Enable responsiveness on mobile devices-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+      <title></title>
+
+      
+        <link rel="alternate" type="application/atom+xml" title="RSS" href="https://www.atteniemi.com/atom.xml">
+      
+
+      
+          <link rel="stylesheet" href="https://www.atteniemi.com/site.css">
+      
+
+      
+      
+    </head>
+
+    <body class="hack dark main container">
+        
+    
+        
+                
+                    <header>
+                        <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;www.atteniemi.com">
+                                <span itemprop="name">home</span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;www.atteniemi.com&#x2F;about">
+                                <span itemprop="name">about</span></a>
+                        
+                            <a itemprop="url"
+                               class=""
+                               href="https:&#x2F;&#x2F;github.com&#x2F;hur">
+                                <span itemprop="name">github</span></a>
+                        
+                        </nav>
+                    </header>
+                
+            
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">Scalable CTF infrastructure: Part 1 - Scaling CTFd on GCP</h1>
+        <span class="muted">
+    <svg style="margin-bottom:-3px" class="i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>4 minute read</span>
+    <svg style="margin-bottom: -3px" class="i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2022-08-31
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>This post is about the infrastructure behind pwnEd 3, the third installment of the annual CTF competition hosted by SIGINT. This time, 45 teams or approximately 155 users signed up. We used Google Cloud Platform to host CTFd, and DigitalOcean to host our challenges on a Kubernetes cluster. In this post, I'm going to share our architecture and a few tricky bits we faced while setting the CTF up.</p>
+<span id="continue-reading"></span><h2 id="ctfd">CTFd</h2>
+<p>We wanted our CTFd deployment to be able to scale for larger CTFs we might host. Furthermore, by using Infrastructure as Code tools like Terraform and documenting the deployment process, we can ensure that future members of the society are able to also host CTFs with ease, without having to solve the same problems again.</p>
+<p>We deploy CTFd on App Engine, backed by Cloud SQL and Memorystore Redis. Challenge files are served from a Cloud Storage Bucket.</p>
+<p>The full Terraform source for our CTFd deployment is available at <a href="https://github.com/hur/ctfd-gcp">hur/ctfd-gcp</a></p>
+<p><img src="https://raw.githubusercontent.com/hur/ctfd-gcp/master/docs/architecture_overview.svg" alt="CTFd Architecture diagram" /></p>
+<p>The applications are deployed in a VPC, and only App Engine has a public IP address, and sits behind the App Engine load balancer, allowing us to add instances of CTFd easily. We used manual scaling in order for costs to be more predictable, but App Engine supports autoscaling and it is easily enabled if the number of instances is more volatile.</p>
+<p>Cloud SQL and Redis are also easily configured with High Availability without having to worry about implementation details, making scaling up easier.</p>
+<p>One thing to note when configuring CTFd in App Engine is that the <code>REVERSE_PROXY</code> variable needs to be set correctly. This is necessary for CTFd to correctly handle <code>X-Forwarded-</code> headers and enables it to correctly determine visitor IP addresses in the authentication log. </p>
+<p>In our case, we are behind the App Engine load balancer and also the Cloudflare CDN, so we set </p>
+<pre data-lang="tf" style="background-color:#181818;color:#c4c4c4;" class="language-tf "><code class="language-tf" data-lang="tf"><span>resource </span><span style="color:#c59c70;">&quot;google_app_engine_flexible_app_version&quot; &quot;ctfd&quot; </span><span>{
+</span><span>    </span><span style="color:#ca7473;">...
+</span><span>    </span><span style="color:#b678a9;">env_variables </span><span style="color:#ca7473;">= </span><span>{
+</span><span>        </span><span style="color:#c59c70;">REVERSE_PROXY </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&quot;2,1,0,0,0&quot;
+</span><span>    }
+</span></code></pre>
+<p>Furthermore, in order to get CTFd working with GCP's storage buckets, 
+we need to configure <a href="https://cloud.google.com/storage/docs/interoperability">interoperability</a> using the V4 signing process and HMAC keys. </p>
+<p>In terraform, we achieve this by adding an interop service account</p>
+<pre data-lang="tf" style="background-color:#181818;color:#c4c4c4;" class="language-tf "><code class="language-tf" data-lang="tf"><span style="color:#6a6a6a;"># Enable access key and secret to use with CTFd
+</span><span>resource </span><span style="color:#c59c70;">&quot;google_service_account&quot; &quot;interop_account&quot; </span><span>{
+</span><span>    </span><span style="color:#b678a9;">account_id </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&quot;interop&quot;
+</span><span>    </span><span style="color:#b678a9;">project </span><span style="color:#ca7473;">= </span><span>google_project</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">ctf</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">project_id
+</span><span>}
+</span></code></pre>
+<p>adding an HMAC key to the interop service account</p>
+<pre data-lang="tf" style="background-color:#181818;color:#c4c4c4;" class="language-tf "><code class="language-tf" data-lang="tf"><span>resource </span><span style="color:#c59c70;">&quot;google_storage_hmac_key&quot; &quot;interop_key&quot; </span><span>{
+</span><span>    </span><span style="color:#b678a9;">service_account_email </span><span style="color:#ca7473;">= </span><span>google_service_account</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">interop_account</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">email
+</span><span>}
+</span></code></pre>
+<p>and adding the service account as an IAM member to the bucket with the role <code>storage.objectAdmin</code></p>
+<pre data-lang="tf" style="background-color:#181818;color:#c4c4c4;" class="language-tf "><code class="language-tf" data-lang="tf"><span>resource </span><span style="color:#c59c70;">&quot;google_storage_bucket_iam_member&quot; &quot;interop_iam&quot; </span><span>{
+</span><span>    </span><span style="color:#b678a9;">bucket </span><span style="color:#ca7473;">= </span><span>google_storage_bucket</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">challenge_files</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">name
+</span><span>    </span><span style="color:#b678a9;">role </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&quot;roles/storage.objectAdmin&quot;
+</span><span>    </span><span style="color:#b678a9;">member </span><span style="color:#ca7473;">= </span><span style="color:#c59c70;">&quot;serviceAccount:</span><span style="color:#ca7473;">${</span><span>google_service_account</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">interop_account</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">email</span><span style="color:#ca7473;">}</span><span style="color:#c59c70;">&quot;
+</span><span>}
+</span></code></pre>
+<p>Then, we can set the environment variables for CTFd like it was an S3 bucket.</p>
+<pre data-lang="tf" style="background-color:#181818;color:#c4c4c4;" class="language-tf "><code class="language-tf" data-lang="tf"><span>resource </span><span style="color:#c59c70;">&quot;google_app_engine_flexible_app_version&quot; &quot;ctfd&quot; </span><span>{
+</span><span>    </span><span style="color:#ca7473;">...
+</span><span>    </span><span style="color:#b678a9;">env_variables </span><span style="color:#ca7473;">= </span><span>{
+</span><span>        ...
+</span><span>        </span><span style="color:#c59c70;">AWS_ACCESS_KEY_ID </span><span style="color:#ca7473;">=</span><span> google_storage_hmac_key</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">interop_key</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">access_id
+</span><span>        </span><span style="color:#c59c70;">AWS_SECRET_ACCESS_KEY </span><span style="color:#ca7473;">=</span><span> google_storage_hmac_key</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">interop_key</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">secret
+</span><span>        </span><span style="color:#c59c70;">AWS_S3_BUCKET </span><span style="color:#ca7473;">=</span><span> google_storage_bucket</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">challenge_files</span><span style="color:#ca7473;">.</span><span style="color:#b678a9;">name
+</span><span>    }
+</span></code></pre>
+<p>Now, we can serve challenge files via CTFd from a Cloud Storage Bucket without having to make the bucket public!</p>
+<p>Lastly, one small thing with CTFd v3.4.1 is that it did not support configuring the port it runs on. App Engine Flex requires the applications to listen on port 8080, but CTFd listens on port 8000. We had to apply the following patch to circumvent this problem (thanks to the folks at DownUnderCTF for <a href="https://github.com/DownUnderCTF/ctfd-appengine/blob/master/patch.txt">this</a>:</p>
+<pre style="background-color:#181818;color:#c4c4c4;"><code><span>diff -ruN original/docker-entrypoint.sh changes/docker-entrypoint.sh
+</span><span>--- original/docker-entrypoint.sh
+</span><span>+++ changes/docker-entrypoint.sh
+</span><span>@@ -5,6 +5,8 @@
+</span><span> WORKER_CLASS=${WORKER_CLASS:-gevent}
+</span><span> ACCESS_LOG=${ACCESS_LOG:--}
+</span><span> ERROR_LOG=${ERROR_LOG:--}
+</span><span>+WORKER_TIMEOUT=${WORKER_TIMEOUT:-60}
+</span><span>+WORKER_PORT=${WORKER_PORT:-8080}
+</span><span> WORKER_TEMP_DIR=${WORKER_TEMP_DIR:-/dev/shm}
+</span><span> SECRET_KEY=${SECRET_KEY:-}
+</span><span> DATABASE_URL=${DATABASE_URL:-}
+</span><span>@@ -42,8 +44,9 @@
+</span><span> # Start CTFd
+</span><span> echo &quot;Starting CTFd&quot;
+</span><span> exec gunicorn &#39;CTFd:create_app()&#39; \
+</span><span>-    --bind &#39;0.0.0.0:8000&#39; \
+</span><span>+    --bind &quot;0.0.0.0:$WORKER_PORT&quot; \
+</span><span>     --workers $WORKERS \
+</span><span>+    --timeout $WORKER_TIMEOUT \
+</span><span>     --worker-tmp-dir &quot;$WORKER_TEMP_DIR&quot; \
+</span><span>     --worker-class &quot;$WORKER_CLASS&quot; \
+</span><span>     --access-logfile &quot;$ACCESS_LOG&quot; \
+</span></code></pre>
+<p>For details on how this integrated to our Terraform deployment and the CTFd Dockerfile, see the repository linked above. </p>
+<p>Since this post became so long, Kubernetes and the challenge cluster will be described in another post.</p>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by Atte Niemi
+                
+                
+                    
+                    in <a href="https://www.atteniemi.com/categories/security/">security</a>
+                
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+    </body>
+
+</html>
+

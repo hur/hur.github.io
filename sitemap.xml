@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://www.atteniemi.com/</loc>
+    </url>
+    <url>
+        <loc>https://www.atteniemi.com/about/</loc>
+        <lastmod>2022-08-30</lastmod>
+    </url>
+    <url>
+        <loc>https://www.atteniemi.com/categories/</loc>
+    </url>
+    <url>
+        <loc>https://www.atteniemi.com/categories/security/</loc>
+    </url>
+    <url>
+        <loc>https://www.atteniemi.com/ctf-infra-writeup/</loc>
+        <lastmod>2022-08-31</lastmod>
+    </url>
+    <url>
+        <loc>https://www.atteniemi.com/hacking-google/</loc>
+        <lastmod>2022-10-17</lastmod>
+    </url>
+    <url>
+        <loc>https://www.atteniemi.com/page/1/</loc>
+    </url>
+    <url>
+        <loc>https://www.atteniemi.com/tags/</loc>
+    </url>
+</urlset>
